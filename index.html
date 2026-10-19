@@ -73,10 +73,27 @@
   if (!PAGES.includes(page)) page = '';
 
   const frame = document.getElementById('app');
-  const hideSplash = () => document.getElementById('splash').classList.add('hidden');
+  const splash = document.getElementById('splash');
+  const hideSplash = () => splash.classList.add('hidden');
   frame.addEventListener('load', hideSplash);
-  setTimeout(hideSplash, 8000); // حتى لا تبقى شاشة البداية فوق صفحة خطأ إن تأخر التحميل
-  frame.src = APP_URL + (page ? '?page=' + page : '');
+  function openPage(target) {
+    splash.classList.remove('hidden');
+    setTimeout(hideSplash, 8000); // حتى لا تبقى شاشة البداية فوق صفحة خطأ إن تأخر التحميل
+    frame.src = APP_URL + (target ? '?page=' + target : '');
+  }
+  openPage(page);
+
+  // المنظومة تطلب الانتقال لصفحة أخرى (دخول المسؤولين، العودة للرئيسية):
+  // يُبدَّل الإطار هنا حتى يبقى المستخدم داخل التطبيق، ويُرد عليها حتى لا تفتح الصفحة بنفسها.
+  // الطلب لا يُقبل إلا من إطارات Google، وبصفحات معروفة فقط.
+  window.addEventListener('message', e => {
+    const fromGoogle = /^https:\/\/([a-z0-9-]+\.)*(googleusercontent\.com|google\.com)$/.test(e.origin);
+    if (!fromGoogle || !e.data || e.data.type !== 'abusurra:navigate') return;
+    const target = PAGES.includes(e.data.page) ? e.data.page : '';
+    if (e.source) e.source.postMessage({ type: 'abusurra:navigate-ack' }, e.origin);
+    store.set(PAGE_KEY, target);
+    openPage(target);
+  });
 
   // زر التثبيت
   const standalone = matchMedia('(display-mode: standalone)').matches || navigator.standalone === true;
