@@ -1,0 +1,111 @@
+<!doctype html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>تقارير أبوصرة</title>
+<meta name="description" content="منظومة التقارير الإدارية – بيت شباب أبوصرة">
+<meta name="theme-color" content="#0d4f45">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="icon" href="icons/icon-192.png">
+<link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="تقارير أبوصرة">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<style>
+  :root { --brand: #0d4f45; --brand-2: #176b5b; --ink: #17231e; --muted: #6f7d76; --bg: #f7fbf9; }
+  * { box-sizing: border-box; }
+  html, body { margin: 0; height: 100%; background: var(--bg); font-family: Tahoma, Arial, sans-serif; color: var(--ink); }
+  #app { position: fixed; inset: 0; width: 100%; height: 100%; border: 0; background: var(--bg); }
+  #splash { position: fixed; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 14px; background: var(--bg); transition: opacity .3s; z-index: 1; }
+  #splash img { width: 120px; height: 120px; border-radius: 26px; box-shadow: 0 8px 24px rgba(13,79,69,.15); }
+  #splash p { margin: 0; color: var(--muted); font-size: 14px; }
+  #splash.hidden { opacity: 0; pointer-events: none; }
+  .bar { position: fixed; inset-inline: 12px; bottom: calc(12px + env(safe-area-inset-bottom)); z-index: 2; display: none; align-items: center; gap: 10px; padding: 12px 14px; border-radius: 16px; background: #fff; box-shadow: 0 10px 30px rgba(0,0,0,.18); font-size: 14px; line-height: 1.7; }
+  .bar.show { display: flex; }
+  .bar img { width: 40px; height: 40px; border-radius: 10px; flex-shrink: 0; }
+  .bar .text { flex: 1; min-width: 0; }
+  .bar strong { display: block; color: var(--brand); }
+  .bar button { border: 0; border-radius: 11px; padding: 10px 14px; font: inherit; font-weight: 700; cursor: pointer; }
+  .bar .install { background: linear-gradient(135deg, var(--brand-2), var(--brand)); color: #fff; }
+  .bar .close { background: #f0f4f2; color: #40524c; padding: 10px 12px; }
+  .share { display: inline-block; padding: 0 4px; border: 1px solid #c9d6d0; border-radius: 6px; font-size: 12px; }
+</style>
+</head>
+<body>
+<div id="splash"><img src="icons/icon-192.png" alt=""><p>جارٍ فتح منظومة التقارير...</p></div>
+<iframe id="app" title="منظومة التقارير الإدارية" allow="camera; clipboard-write"></iframe>
+
+<!-- أندرويد وكروم: زر التثبيت الحقيقي -->
+<div id="installBar" class="bar" role="dialog" aria-label="تثبيت التطبيق">
+  <img src="icons/icon-192.png" alt="">
+  <div class="text"><strong>ثبّت تطبيق التقارير</strong>يفتح من الشاشة الرئيسية مثل أي تطبيق.</div>
+  <button class="install" id="installBtn" type="button">تثبيت</button>
+  <button class="close" type="button" data-dismiss aria-label="إغلاق">✕</button>
+</div>
+
+<!-- آيفون: لا يسمح سفاري بزر تثبيت، فتظهر الخطوات -->
+<div id="iosBar" class="bar" role="dialog" aria-label="تثبيت التطبيق على آيفون">
+  <img src="icons/icon-192.png" alt="">
+  <div class="text"><strong>ثبّت التطبيق على آيفون</strong>اضغط زر المشاركة <span class="share">⬆︎</span> ثم «إضافة إلى الشاشة الرئيسية».</div>
+  <button class="close" type="button" data-dismiss aria-label="إغلاق">✕</button>
+</div>
+
+<script>
+  // رابط تطبيق Apps Script المنشور
+  const APP_URL = 'https://script.google.com/macros/s/AKfycbyjDQy1JuM8m4zSd2QDChNGIoWs_M5q-M7StlM-1y2BEDjAJncBPsoPiiyWXNgmAsQ_YQ/exec';
+  const PAGES = ['head', 'admin'];
+  const PAGE_KEY = 'abusurra.app.page';
+  const DISMISS_KEY = 'abusurra.app.installDismissed';
+
+  const store = {
+    get(k) { try { return localStorage.getItem(k); } catch (e) { return null; } },
+    set(k, v) { try { localStorage.setItem(k, v); } catch (e) {} }
+  };
+
+  // الصفحة: من الرابط (?page=head أو ?page=admin أو ?page=home)، وإلا آخر صفحة فُتح منها التطبيق.
+  // فرئيس القسم الذي يثبّت التطبيق من رابط بوابته تفتح له البوابة دائمًا.
+  const params = new URLSearchParams(location.search);
+  let page = params.get('page');
+  if (page !== null) store.set(PAGE_KEY, PAGES.includes(page) ? page : '');
+  else page = store.get(PAGE_KEY) || '';
+  if (!PAGES.includes(page)) page = '';
+
+  const frame = document.getElementById('app');
+  const hideSplash = () => document.getElementById('splash').classList.add('hidden');
+  frame.addEventListener('load', hideSplash);
+  setTimeout(hideSplash, 8000); // حتى لا تبقى شاشة البداية فوق صفحة خطأ إن تأخر التحميل
+  frame.src = APP_URL + (page ? '?page=' + page : '');
+
+  // زر التثبيت
+  const standalone = matchMedia('(display-mode: standalone)').matches || navigator.standalone === true;
+  const dismissed = store.get(DISMISS_KEY) === '1';
+  let deferredPrompt = null;
+
+  window.addEventListener('beforeinstallprompt', e => {
+    e.preventDefault();
+    deferredPrompt = e;
+    if (!dismissed) document.getElementById('installBar').classList.add('show');
+  });
+  document.getElementById('installBtn').addEventListener('click', async () => {
+    if (!deferredPrompt) return;
+    deferredPrompt.prompt();
+    await deferredPrompt.userChoice;
+    deferredPrompt = null;
+    document.getElementById('installBar').classList.remove('show');
+  });
+  window.addEventListener('appinstalled', () => document.getElementById('installBar').classList.remove('show'));
+
+  const isIos = /iphone|ipad|ipod/i.test(navigator.userAgent) || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
+  if (isIos && !standalone && !dismissed) setTimeout(() => document.getElementById('iosBar').classList.add('show'), 2500);
+
+  document.querySelectorAll('[data-dismiss]').forEach(btn => btn.addEventListener('click', () => {
+    btn.closest('.bar').classList.remove('show');
+    store.set(DISMISS_KEY, '1');
+  }));
+
+  if ('serviceWorker' in navigator) navigator.serviceWorker.register('sw.js');
+</script>
+</body>
+</html>

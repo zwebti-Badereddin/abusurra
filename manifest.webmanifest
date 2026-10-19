@@ -1,0 +1,25 @@
+{
+  "name": "منظومة التقارير الإدارية – بيت شباب أبوصرة",
+  "short_name": "تقارير أبوصرة",
+  "description": "تسجيل التقارير اليومية لأقسام بيت شباب أبوصرة ومتابعتها",
+  "lang": "ar",
+  "dir": "rtl",
+  "id": "./",
+  "start_url": "./",
+  "scope": "./",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#f7fbf9",
+  "theme_color": "#0d4f45",
+  "categories": ["productivity", "business"],
+  "icons": [
+    { "src": "icons/icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any" },
+    { "src": "icons/icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any" },
+    { "src": "icons/maskable-512.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" }
+  ],
+  "shortcuts": [
+    { "name": "تسجيل تقرير", "url": "./?page=home", "icons": [{ "src": "icons/icon-192.png", "sizes": "192x192" }] },
+    { "name": "بوابة رؤساء الأقسام", "url": "./?page=head", "icons": [{ "src": "icons/icon-192.png", "sizes": "192x192" }] },
+    { "name": "لوحة الإدارة", "url": "./?page=admin", "icons": [{ "src": "icons/icon-192.png", "sizes": "192x192" }] }
+  ]
+}
